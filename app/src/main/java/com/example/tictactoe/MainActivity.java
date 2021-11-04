@@ -10,12 +10,15 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.Toast;
 
+import java.util.Arrays;
+
 public class MainActivity extends AppCompatActivity {
 
     static final String PLAYER_1 = "X";
     static final String PLAYER_2 = "O";
 
     boolean player1Turn = true;
+    int moveCount = 0;
 
     byte[][] board = new byte[3][3];
 
@@ -40,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    protected void playAgain(){
+        finish();
+        startActivity(getIntent());
+    }
+
     class CellListener implements View.OnClickListener{
         int row, col;
 
@@ -58,21 +66,26 @@ public class MainActivity extends AppCompatActivity {
             if(player1Turn){
                 ((Button)v).setText(PLAYER_1);
                 board[row][col] = 1;
+                moveCount++;
 
             }else{
 
                 ((Button)v).setText(PLAYER_2);
                 board[row][col] = 2;
+                moveCount++;
 
             }
             if(gameEnded(row,col) == -1){
                 player1Turn = !player1Turn;
             }else if(gameEnded(row,col) == 0){
                 Toast.makeText(MainActivity.this,"It is a draw.",Toast.LENGTH_LONG).show();
+                playAgain();
             }else if(gameEnded(row,col) == 1){
                 Toast.makeText(MainActivity.this,"Player 1 wins.",Toast.LENGTH_LONG).show();
+                playAgain();
             }else{
                 Toast.makeText(MainActivity.this,"Player 2 wins.",Toast.LENGTH_LONG).show();
+                playAgain();
             }
 
 
@@ -94,18 +107,48 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
         }
+
         if(win){
             return symbol;
         }
+
+        win = true;
+        for(int i = 0 ; i < 3 ; i++){
+            if(board[row][i] != symbol){
+                win = false;
+                break;
+            }
+        }
+
+        if(win){
+            return symbol;
+        }
+
+        win = true;
+        for(int i = 0 ; i < 3 ; i++){
+            if(board[i][i] != symbol){
+                win = false;
+                break;
+            }
+        }
+
+        if(win){
+            return symbol;
+        }
+
+        if(moveCount == 9){
+            return 0;
+        }
         //check row
         //check draw
-
         return -1;
     }
+
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putBoolean("player1Turn",player1Turn);
+        outState.putInt("moveCount",moveCount);
         byte[] boardSingle = new byte[9];
         for(int i = 0 ; i < 3 ; i++){
             for(int j = 0 ; j < 3 ; j++){
@@ -120,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         player1Turn = savedInstanceState.getBoolean("player1Turn");
+        moveCount = savedInstanceState.getInt("moveCount");
         byte[] boardSingle = savedInstanceState.getByteArray("board");
         for(int i = 0 ; i < 9 ; i++){
             board[i / 3][i % 3] = boardSingle[i];
